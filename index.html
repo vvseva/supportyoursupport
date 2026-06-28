@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Deadlock Soul Transfer</title>
   <style>
-    /* 1-Bit Sharp Pixel Aesthetic */
+    /* 1-Bit Sharp Pixel Aesthetic - Deadlock Palette */
     :root {
-      --bg-color: #ffffff;
-      --fg-color: #000000;
+      --bg-color: #1a1625; /* Deep occult dark purple */
+      --fg-color: #8cff9e; /* Glowing soul green */
     }
 
     body {
@@ -57,6 +57,7 @@
       font-weight: bold;
       font-size: 14px;
       letter-spacing: 1px;
+      color: var(--fg-color);
     }
 
     .content {
@@ -164,6 +165,11 @@
       margin: 0;
     }
 
+    input::placeholder {
+      color: var(--fg-color);
+      opacity: 0.5;
+    }
+
     .submit-btn {
       width: 100%;
       font-size: 18px;
@@ -173,6 +179,15 @@
 
     .hidden {
       display: none !important;
+    }
+    
+    .success-gif {
+      max-width: 100px;
+      height: auto;
+      margin: 0 auto 20px auto;
+      display: block;
+      border: 2px solid var(--fg-color);
+      image-rendering: pixelated;
     }
 
     .success-msg {
@@ -228,6 +243,7 @@
       <span class="title-bar-text">TRANSFER_COMPLETE</span>
     </div>
     <div class="content">
+      <img src="viscous-viscous-deadlock.gif" alt="Viscous" class="success-gif">
       <p class="success-msg"><strong>Thank you for supporting your support.</strong></p>
       <button type="button" class="submit-btn" id="reset-btn">Initiate New Transfer</button>
     </div>
