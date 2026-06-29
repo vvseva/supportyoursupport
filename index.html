@@ -5,10 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Deadlock Soul Transfer</title>
   <style>
-    /* 1-Bit Sharp Pixel Aesthetic - Deadlock Palette */
+    /* Default / Viscous Theme (Green) */
     :root {
-      --bg-color: #1a1625; /* Deep occult dark purple */
-      --fg-color: #8cff9e; /* Glowing soul green */
+      --bg-color: #1a1625;
+      --fg-color: #8cff9e;
+    }
+
+    /* Rem Theme (Nighttime Blue) */
+    [data-theme="rem"] {
+      --bg-color: #0b1320;
+      --fg-color: #4da6ff;
+    }
+
+    /* Dynamo Theme (Gold) */
+    [data-theme="dynamo"] {
+      --bg-color: #241a0f;
+      --fg-color: #ffc107;
     }
 
     body {
@@ -19,12 +31,14 @@
       color: var(--fg-color);
       font-family: 'Courier New', Courier, monospace;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
       margin: 0;
       padding: 1rem;
       box-sizing: border-box;
+      transition: background-color 0.3s, color 0.3s;
     }
 
     .window {
@@ -35,9 +49,10 @@
       max-width: 480px;
       display: flex;
       flex-direction: column;
+      margin-bottom: 24px;
+      transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
     }
 
-    /* Classic striped title bar */
     .title-bar {
       border-bottom: 2px solid var(--fg-color);
       padding: 4px 8px;
@@ -93,11 +108,17 @@
       font-weight: bold;
     }
 
-    .tile-row {
+    .tile-row, .theme-controls {
       display: flex;
       justify-content: space-between;
       gap: 12px;
       margin-bottom: 24px;
+    }
+
+    .theme-controls {
+      max-width: 480px;
+      width: 100%;
+      margin-bottom: 0;
     }
 
     button, input {
@@ -114,7 +135,7 @@
 
     button {
       font-weight: bold;
-      transition: background 0s, color 0s;
+      transition: background 0.1s, color 0.1s;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -125,14 +146,18 @@
       background: var(--fg-color);
       color: var(--bg-color);
     }
-    
-    /* Invert the soul icon when the button is selected/hovered to maintain the 1-bit look */
+
     button:hover .soul-icon, button:active .soul-icon, button.selected .soul-icon {
       filter: invert(1);
     }
 
-    .soul-btn {
+    .soul-btn, .theme-btn {
       flex: 1;
+    }
+
+    .theme-btn {
+      font-size: 14px;
+      padding: 6px;
     }
 
     .input-group {
@@ -182,7 +207,7 @@
     }
     
     .success-gif {
-      max-width: 100px;
+      max-width: 150px;
       height: auto;
       margin: 0 auto 20px auto;
       display: block;
@@ -243,20 +268,90 @@
       <span class="title-bar-text">TRANSFER_COMPLETE</span>
     </div>
     <div class="content">
-      <img src="viscous-viscous-deadlock.gif" alt="Viscous" class="success-gif">
+      <!-- GIF source is dynamically injected by JavaScript -->
+      <img src="img/viscous.gif" alt="Hero Response" class="success-gif" id="success-gif">
       <p class="success-msg"><strong>Thank you for supporting your support.</strong></p>
       <button type="button" class="submit-btn" id="reset-btn">Initiate New Transfer</button>
     </div>
   </div>
 
-  <script>
+  <!-- Local Theme Controls -->
+  <div class="theme-controls">
+    <button type="button" class="theme-btn" data-theme-target="viscous">Viscous</button>
+    <button type="button" class="theme-btn" data-theme-target="rem">Rem</button>
+    <button type="button" class="theme-btn" data-theme-target="dynamo">Dynamo</button>
+  </div>
+
+<script>
+    // 1. Data Structures
+    const themeData = {
+      viscous: { gifPath: 'img/viscous.gif' },
+      rem:     { gifPath: 'img/rem.gif' },
+      dynamo:  { gifPath: 'img/dynamo.gif' }
+    };
+
+    // Format: https://gist.githubusercontent.com/USERNAME/GIST_ID/raw/theme.json
+    const REMOTE_JSON_URL = 'https://gist.githubusercontent.com/vvseva/5f66e5edba811f8fb53ca12d5a4cd79a/raw/theme.json ';
+
+    // 2. DOM Elements
     const soulBtns = document.querySelectorAll('.soul-btn');
+    const themeBtns = document.querySelectorAll('.theme-btn');
     const customInput = document.getElementById('custom-souls');
     const tipForm = document.getElementById('tip-form');
     const transferWindow = document.getElementById('transfer-window');
     const successWindow = document.getElementById('success-window');
     const resetBtn = document.getElementById('reset-btn');
+    const successGif = document.getElementById('success-gif');
 
+    // 3. Core Functions
+    function applyTheme(themeName) {
+      if (!themeData[themeName]) return;
+      
+      // Update the CSS variables globally
+      document.body.setAttribute('data-theme', themeName);
+      
+      // Route the correct GIF for the success screen
+      successGif.src = themeData[themeName].gifPath;
+      
+      // Visually highlight the active theme button
+      themeBtns.forEach(btn => {
+        if (btn.getAttribute('data-theme-target') === themeName) {
+          btn.classList.add('selected');
+        } else {
+          btn.classList.remove('selected');
+        }
+      });
+    }
+
+    async function fetchGlobalTheme() {
+      try {
+        // Appending a timestamp bypasses the browser's local cache
+        const response = await fetch(REMOTE_JSON_URL + '?t=' + new Date().getTime());
+        const data = await response.json();
+        
+        // A raw GitHub gist returns the exact JSON you provide
+        const globalTheme = data.theme;
+        
+        if (globalTheme && themeData[globalTheme]) {
+          applyTheme(globalTheme);
+        }
+      } catch (error) {
+        console.error("Could not load global theme, defaulting to Viscous.", error);
+        applyTheme('viscous');
+      }
+    }
+
+    // 4. Event Listeners
+    
+    // Theme switching via UI
+    themeBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const targetTheme = e.currentTarget.getAttribute('data-theme-target');
+        applyTheme(targetTheme);
+      });
+    });
+
+    // Soul amount selection
     soulBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         soulBtns.forEach(b => b.classList.remove('selected'));
@@ -269,6 +364,7 @@
       soulBtns.forEach(b => b.classList.remove('selected'));
     });
 
+    // Form submission
     tipForm.addEventListener('submit', (e) => {
       e.preventDefault(); 
       const soulsToTip = customInput.value;
@@ -279,12 +375,16 @@
       }
     });
 
+    // Reset sequence
     resetBtn.addEventListener('click', () => {
       tipForm.reset();
       soulBtns.forEach(b => b.classList.remove('selected'));
       successWindow.classList.add('hidden');
       transferWindow.classList.remove('hidden');
     });
+
+    // 5. Initialization
+    fetchGlobalTheme();
   </script>
 </body>
 </html>
