@@ -13,8 +13,24 @@
 </head>
 <body>
 
-  <!-- Main Tip Screen -->
-  <div class="window" id="transfer-window">
+  <div class="window" id="loading-skeleton">
+    <div class="title-bar">
+      <span class="title-bar-text">ESTABLISHING_LINK...</span>
+    </div>
+    <div class="content">
+      <div class="skeleton-block skeleton-header"></div>
+      <div class="skeleton-block skeleton-text"></div>
+      <div class="tile-row">
+        <div class="skeleton-block skeleton-btn"></div>
+        <div class="skeleton-block skeleton-btn"></div>
+        <div class="skeleton-block skeleton-btn"></div>
+      </div>
+      <div class="skeleton-block skeleton-input"></div>
+      <div class="skeleton-block skeleton-submit"></div>
+    </div>
+  </div>
+
+  <div class="window hidden" id="transfer-window">
     <div class="title-bar">
       <span class="title-bar-text">SOUL_TRANSFER_PROTOCOL</span>
     </div>
