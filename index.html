@@ -97,7 +97,6 @@
     const database = getDatabase(app);
     const tipsRef = ref(database, 'supportyoursupport');
     // MODULE 2: Global State & Theming
-    // MODULE 2: Global State & Theming
     const themeData = {
       viscous: { gifPath: 'img/viscous.gif' },
       rem:     { gifPath: 'img/rem.gif' },
@@ -113,9 +112,12 @@
       document.body.setAttribute('data-theme', themeName);
       document.getElementById('success-gif').src = themeData[themeName].gifPath;
       
+      // Keep Chart.js colors perfectly synced with the active theme
       if (window.tipChartInstance) {
-        window.tipChartInstance.data.datasets[0].borderColor = getThemeColor();
-        window.tipChartInstance.options.scales.y.ticks.color = getThemeColor();
+        const activeColor = getThemeColor();
+        window.tipChartInstance.data.datasets[0].borderColor = activeColor;
+        window.tipChartInstance.options.scales.x.ticks.color = activeColor;
+        window.tipChartInstance.options.scales.y.ticks.color = activeColor;
         window.tipChartInstance.update();
       }
     }
@@ -131,21 +133,22 @@
       }
     }
 
-    // MODULE 3: Chart.js Initialization
+    // MODULE 3: Chart.js Initialization (Histogram Setup)
     const ctx = document.getElementById('tipChart').getContext('2d');
     
     window.tipChartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: [],
+        labels: [], // Will hold unique tip amounts (X-axis)
         datasets: [{
-          label: 'Souls Transferred',
-          data: [],
+          label: 'Frequency',
+          data: [], // Will hold the count of each amount (Y-axis)
           backgroundColor: 'transparent',
           borderColor: '#8cff9e', 
           borderWidth: 2,
           borderRadius: 0, 
-          barPercentage: 0.8,
+          barPercentage: 0.9,
+          categoryPercentage: 1.0 // Eliminates gaps between bars for a blockier look
         }]
       },
       options: {
@@ -154,7 +157,12 @@
         animation: false, 
         scales: {
           x: {
-            display: false 
+            display: true, // Show the soul amounts
+            grid: { display: false },
+            ticks: {
+              color: '#8cff9e',
+              font: { family: 'Courier New', size: 12 }
+            }
           },
           y: {
             beginAtZero: true,
@@ -163,6 +171,7 @@
               tickLength: 0
             },
             ticks: {
+              stepSize: 1, // Force Y-axis to use whole numbers (you can't have 1.5 tips)
               color: '#8cff9e',
               font: { family: 'Courier New', size: 10 },
               maxTicksLimit: 5
@@ -177,7 +186,11 @@
             titleFont: { family: 'Courier New' },
             bodyFont: { family: 'Courier New' },
             cornerRadius: 0,
-            displayColors: false
+            displayColors: false,
+            callbacks: {
+              title: (context) => `${context[0].label} Souls`,
+              label: (context) => `Count: ${context.raw}`
+            }
           }
         }
       }
@@ -227,15 +240,32 @@
       transferWindow.classList.remove('hidden');
     });
 
-    const recentTipsQuery = query(tipsRef, limitToLast(20));
+    // MODULE 5: Data Aggregation (Tidy Design)
+    // Fetching the last 100 tips to build a meaningful distribution
+    const recentTipsQuery = query(tipsRef, limitToLast(100));
+    
     onValue(recentTipsQuery, (snapshot) => {
-      const tipsData = [];
+      const tipCounts = {}; // Our frequency map
+      
+      // Tidy aggregation: counting occurrences of each amount
       snapshot.forEach((childSnapshot) => {
-        tipsData.push(childSnapshot.val().amount);
+        const amount = childSnapshot.val().amount;
+        if (amount) {
+          tipCounts[amount] = (tipCounts[amount] || 0) + 1;
+        }
       });
 
-      window.tipChartInstance.data.labels = tipsData.map(() => ''); 
-      window.tipChartInstance.data.datasets[0].data = tipsData;
+      // Extract unique amounts and sort them numerically for the X-axis
+      const sortedAmounts = Object.keys(tipCounts)
+        .map(Number)
+        .sort((a, b) => a - b);
+
+      // Map the sorted amounts to their corresponding frequencies for the Y-axis
+      const frequencies = sortedAmounts.map(amount => tipCounts[amount]);
+
+      // Inject structured data into Chart.js
+      window.tipChartInstance.data.labels = sortedAmounts;
+      window.tipChartInstance.data.datasets[0].data = frequencies;
       window.tipChartInstance.update();
     });
 
