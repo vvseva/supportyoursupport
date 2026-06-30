@@ -67,8 +67,10 @@
         console.error("Theme fetch failed. Defaulting to classic old web.", error);
         applyTheme('classic');
       } finally {
-        // The theme is now safely loaded and applied.
-        // Swap the loading skeleton for the real interface.
+        // Remove the background skeleton
+        document.body.classList.remove('is-loading');
+        
+        // Swap the foreground UI
         document.getElementById('loading-skeleton').classList.add('hidden');
         document.getElementById('transfer-window').classList.remove('hidden');
       }

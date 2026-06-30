@@ -244,3 +244,25 @@ input::placeholder {
 .skeleton-btn { height: 44px; flex: 1; margin-bottom: 0; }
 .skeleton-input { height: 60px; width: 100%; margin-bottom: 24px; }
 .skeleton-submit { height: 52px; width: 100%; margin-bottom: 0; }
+
+/* Skeleton Background State */
+body.is-loading {
+  /* Generates a classic 1-bit dithered/checkerboard placeholder pattern */
+  --bg-image: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.1) 25%,
+    transparent 25%,
+    transparent 75%,
+    rgba(0, 0, 0, 0.1) 75%,
+    rgba(0, 0, 0, 0.1)
+  ),
+  repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.1) 25%,
+    var(--bg-color) 25%,
+    var(--bg-color) 75%,
+    rgba(0, 0, 0, 0.1) 75%,
+    rgba(0, 0, 0, 0.1)
+  );
+  background-size: 16px 16px;
+}
