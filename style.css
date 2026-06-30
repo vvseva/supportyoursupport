@@ -1,8 +1,16 @@
 /* Default / Viscous Theme (Green) */
 :root {
+  --bg-color: #ffffff;
+  --fg-color: #000000;
+  /* Reverting to the original uncolored Sinner's Sacrifice background */
+  --bg-image: url('https://deadlock.wiki/images/b/b4/Sinner%27s_Sacrifice.png'); 
+}
+
+/* Viscous Theme (Green) */
+[data-theme="viscous"] {
   --bg-color: #1a1625;
   --fg-color: #8cff9e;
-  --bg-image: url('https://deadlock.wiki/images/0/04/Viscous_Neon_Prime.png'); 
+  --bg-image: url('https://deadlock.wiki/images/7/75/Viscous_Neon_Prime.png'); 
 }
 
 /* Rem Theme (Nighttime Blue) */
