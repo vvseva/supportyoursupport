@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Deadlock Soul Transfer</title>
+  
+  <!-- Chart.js for Visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     /* Default / Viscous Theme (Green) */
     :root {
@@ -29,12 +33,9 @@
     body {
       background-color: var(--bg-color);
       background-image: var(--bg-image);
-      
-      /* Classic Web 1.0 Tiled Background */
       background-size: 300px auto;
-      background-repeat: repeat;
       background-position: top left;
-      
+      background-repeat: repeat;
       color: var(--fg-color);
       font-family: 'Courier New', Courier, monospace;
       display: flex;
@@ -203,9 +204,9 @@
     }
     
     .success-gif {
-      max-width: 150px;
+      max-width: 100px;
       height: auto;
-      margin: 0 auto 20px auto;
+      margin: 0 auto 16px auto;
       display: block;
       border: 2px solid var(--fg-color);
       image-rendering: pixelated;
@@ -214,7 +215,18 @@
     .success-msg {
       font-size: 18px;
       line-height: 1.5;
-      margin-bottom: 32px;
+      margin-bottom: 16px;
+    }
+
+    /* Chart Container Styling */
+    .chart-container {
+      width: 100%;
+      height: 150px;
+      margin-bottom: 24px;
+      border: 2px solid var(--fg-color);
+      box-sizing: border-box;
+      padding: 8px;
+      background: var(--bg-color);
     }
   </style>
 </head>
@@ -266,57 +278,146 @@
     <div class="content">
       <img src="img/viscous.gif" alt="Hero Response" class="success-gif" id="success-gif">
       <p class="success-msg"><strong>Thank you for supporting your support.</strong></p>
+      
+      <!-- Visualization Canvas -->
+      <div class="chart-container">
+        <canvas id="tipChart"></canvas>
+      </div>
+
       <button type="button" class="submit-btn" id="reset-btn">Initiate New Transfer</button>
     </div>
   </div>
 
-  <script>
-    // 1. Data Structures
+  <script type="module">
+
+  // Import the functions you need from the SDKs you need
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { getAnalytics, ref, push, onValue, query, limitToLast } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "AIzaSyC-03xng3uqqQ0QOHtBgxto7ocGNwNThXQ",
+      authDomain: "supportyoursupport.firebaseapp.com",
+      databaseURL: "https://supportyoursupport-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "supportyoursupport",
+      storageBucket: "supportyoursupport.firebasestorage.app",
+      messagingSenderId: "735891274194",
+      appId: "1:735891274194:web:3d57607bd48f7eb059f00b",
+      measurementId: "G-0XQSBTRQM9"
+    };
+
+  // Initialize Firebase
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+
+</script>
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const tipsRef = ref(database, 'tips');
+
+    // MODULE 2: Global State & Theming
     const themeData = {
       viscous: { gifPath: 'img/viscous.gif' },
       rem:     { gifPath: 'img/rem.gif' },
       dynamo:  { gifPath: 'img/dynamo.gif' }
     };
 
-    // Live GitHub Gist RAW URL
     const REMOTE_JSON_URL = 'https://gist.githubusercontent.com/vvseva/5f66e5edba811f8fb53ca12d5a4cd79a/raw/theme.json';
 
-    // 2. DOM Elements
-    const soulBtns = document.querySelectorAll('.soul-btn');
-    const customInput = document.getElementById('custom-souls');
-    const tipForm = document.getElementById('tip-form');
-    const transferWindow = document.getElementById('transfer-window');
-    const successWindow = document.getElementById('success-window');
-    const resetBtn = document.getElementById('reset-btn');
-    const successGif = document.getElementById('success-gif');
+    // Helper to extract the active CSS foreground color for the chart
+    const getThemeColor = () => getComputedStyle(document.body).getPropertyValue('--fg-color').trim();
 
-    // 3. Core Functions
     function applyTheme(themeName) {
       if (!themeData[themeName]) return;
-      
-      // Update the CSS variables globally
       document.body.setAttribute('data-theme', themeName);
+      document.getElementById('success-gif').src = themeData[themeName].gifPath;
       
-      // Route the correct GIF for the success screen
-      successGif.src = themeData[themeName].gifPath;
+      // Update chart colors instantly if the theme changes
+      if (window.tipChartInstance) {
+        window.tipChartInstance.data.datasets[0].borderColor = getThemeColor();
+        window.tipChartInstance.options.scales.y.ticks.color = getThemeColor();
+        window.tipChartInstance.update();
+      }
     }
 
     async function fetchGlobalTheme() {
       try {
         const response = await fetch(REMOTE_JSON_URL + '?t=' + new Date().getTime());
         const data = await response.json();
-        const globalTheme = data.theme;
-        
-        if (globalTheme && themeData[globalTheme]) {
-          applyTheme(globalTheme);
-        }
+        if (data.theme && themeData[data.theme]) applyTheme(data.theme);
       } catch (error) {
-        console.error("Could not load global theme, defaulting to Viscous.", error);
+        console.error("Theme fetch failed. Defaulting.", error);
         applyTheme('viscous');
       }
     }
 
-    // 4. Event Listeners
+    // MODULE 3: Chart.js Initialization
+    const ctx = document.getElementById('tipChart').getContext('2d');
+    
+    // Establishing a sharp, non-aliased aesthetic to match the UI
+    window.tipChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Souls Transferred',
+          data: [],
+          backgroundColor: 'transparent',
+          borderColor: '#8cff9e', // Default fallback
+          borderWidth: 2,
+          borderRadius: 0, // Sharp corners
+          barPercentage: 0.8,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false, // Disabling animation for true 1-bit feel
+        scales: {
+          x: {
+            display: false // Hide x-axis clutter
+          },
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)',
+              tickLength: 0
+            },
+            ticks: {
+              color: '#8cff9e',
+              font: { family: 'Courier New', size: 10 },
+              maxTicksLimit: 5
+            },
+            border: { display: false }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#000',
+            titleFont: { family: 'Courier New' },
+            bodyFont: { family: 'Courier New' },
+            cornerRadius: 0,
+            displayColors: false
+          }
+        }
+      }
+    });
+
+    // MODULE 4: Data Flow & Event Listeners
+    const soulBtns = document.querySelectorAll('.soul-btn');
+    const customInput = document.getElementById('custom-souls');
+    const tipForm = document.getElementById('tip-form');
+    const transferWindow = document.getElementById('transfer-window');
+    const successWindow = document.getElementById('success-window');
+    const resetBtn = document.getElementById('reset-btn');
+
     soulBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         soulBtns.forEach(b => b.classList.remove('selected'));
@@ -331,11 +432,21 @@
 
     tipForm.addEventListener('submit', (e) => {
       e.preventDefault(); 
-      const soulsToTip = customInput.value;
+      const soulsToTip = parseInt(customInput.value, 10);
       
       if(soulsToTip) {
+        // Compose the payload and write to Firebase
+        push(tipsRef, {
+          amount: soulsToTip,
+          timestamp: Date.now()
+        });
+
+        // Transition UI
         transferWindow.classList.add('hidden');
         successWindow.classList.remove('hidden');
+        
+        // Ensure chart colors align with the active theme upon opening
+        applyTheme(document.body.getAttribute('data-theme') || 'viscous');
       }
     });
 
@@ -346,7 +457,21 @@
       transferWindow.classList.remove('hidden');
     });
 
-    // 5. Initialization
+    // Subscribing to the latest 20 tips from the database to render the graph
+    const recentTipsQuery = query(tipsRef, limitToLast(20));
+    onValue(recentTipsQuery, (snapshot) => {
+      const tipsData = [];
+      snapshot.forEach((childSnapshot) => {
+        tipsData.push(childSnapshot.val().amount);
+      });
+
+      // Update Chart.js data
+      window.tipChartInstance.data.labels = tipsData.map(() => ''); // Blank labels for X-axis
+      window.tipChartInstance.data.datasets[0].data = tipsData;
+      window.tipChartInstance.update();
+    });
+
+    // Boot Sequence
     fetchGlobalTheme();
   </script>
 </body>
