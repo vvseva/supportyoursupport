@@ -224,3 +224,23 @@ input::placeholder {
   padding: 8px;
   background: var(--bg-color);
 }
+
+.skeleton-block {
+  background-color: var(--fg-color);
+  opacity: 0.2;
+  margin-bottom: 12px;
+  /* Retro 2-step blink animation */
+  animation: retro-pulse 1s infinite alternate steps(2, end);
+}
+
+@keyframes retro-pulse {
+  0% { opacity: 0.1; }
+  100% { opacity: 0.3; }
+}
+
+/* Sizing the blocks to match the actual UI */
+.skeleton-header { height: 48px; width: 100%; margin: 0 auto 24px auto; }
+.skeleton-text { height: 16px; width: 50%; margin: 0 auto 16px auto; }
+.skeleton-btn { height: 44px; flex: 1; margin-bottom: 0; }
+.skeleton-input { height: 60px; width: 100%; margin-bottom: 24px; }
+.skeleton-submit { height: 52px; width: 100%; margin-bottom: 0; }
