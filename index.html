@@ -29,11 +29,11 @@
     body {
       background-color: var(--bg-color);
       background-image: var(--bg-image);
-      /* Updated to cover and center to accommodate large character artworks */
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      background-repeat: no-repeat;
+      
+      /* Classic Web 1.0 Tiled Background */
+      background-size: 300px auto;
+      background-repeat: repeat;
+      background-position: top left;
       
       color: var(--fg-color);
       font-family: 'Courier New', Courier, monospace;
@@ -220,6 +220,7 @@
 </head>
 <body>
 
+  <!-- Main Tip Screen -->
   <div class="window" id="transfer-window">
     <div class="title-bar">
       <span class="title-bar-text">SOUL_TRANSFER_PROTOCOL</span>
@@ -257,6 +258,7 @@
     </div>
   </div>
 
+  <!-- Confirmation Screen -->
   <div class="window hidden" id="success-window">
     <div class="title-bar">
       <span class="title-bar-text">TRANSFER_COMPLETE</span>
@@ -276,8 +278,7 @@
       dynamo:  { gifPath: 'img/dynamo.gif' }
     };
 
-    // Replace this with the RAW URL of your GitHub Gist
-    // Format: https://gist.githubusercontent.com/USERNAME/GIST_ID/raw/theme.json
+    // Live GitHub Gist RAW URL
     const REMOTE_JSON_URL = 'https://gist.githubusercontent.com/vvseva/5f66e5edba811f8fb53ca12d5a4cd79a/raw/theme.json';
 
     // 2. DOM Elements
@@ -316,7 +317,6 @@
     }
 
     // 4. Event Listeners
-    
     soulBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         soulBtns.forEach(b => b.classList.remove('selected'));
