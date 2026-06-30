@@ -313,14 +313,8 @@
   // Initialize Firebase
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-
-</script>
-
-    const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
-    const tipsRef = ref(database, 'tips');
-
+    const tipsRef = ref(database, 'supportyoursupport');
     // MODULE 2: Global State & Theming
     const themeData = {
       viscous: { gifPath: 'img/viscous.gif' },
