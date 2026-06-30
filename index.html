@@ -100,7 +100,8 @@
     const themeData = {
       viscous: { gifPath: 'img/viscous.gif' },
       rem:     { gifPath: 'img/rem.gif' },
-      dynamo:  { gifPath: 'img/dynamo.gif' }
+      dynamo:  { gifPath: 'img/dynamo.gif' },
+      classic: { gifPath: 'https://deadlock.wiki/images/thumb/4/45/Souls.png/21px-Souls.png.webp' } // Generic fallback GIF
     };
 
     const REMOTE_JSON_URL = 'https://gist.githubusercontent.com/vvseva/5f66e5edba811f8fb53ca12d5a4cd79a/raw/theme.json';
@@ -108,9 +109,16 @@
     const getThemeColor = () => getComputedStyle(document.body).getPropertyValue('--fg-color').trim();
 
     function applyTheme(themeName) {
-      if (!themeData[themeName]) return;
-      document.body.setAttribute('data-theme', themeName);
-      document.getElementById('success-gif').src = themeData[themeName].gifPath;
+      // Validate the theme. If it doesn't exist in our dictionary, force 'classic'
+      const activeTheme = themeData[themeName] ? themeName : 'classic';
+
+      if (activeTheme === 'classic') {
+        document.body.removeAttribute('data-theme');
+      } else {
+        document.body.setAttribute('data-theme', activeTheme);
+      }
+      
+      document.getElementById('success-gif').src = themeData[activeTheme].gifPath;
       
       // Keep Chart.js colors perfectly synced with the active theme
       if (window.tipChartInstance) {
@@ -126,10 +134,11 @@
       try {
         const response = await fetch(REMOTE_JSON_URL + '?t=' + new Date().getTime());
         const data = await response.json();
-        if (data.theme && themeData[data.theme]) applyTheme(data.theme);
+        
+        applyTheme(data.theme);
       } catch (error) {
-        console.error("Theme fetch failed. Defaulting.", error);
-        applyTheme('viscous');
+        console.error("Theme fetch failed. Defaulting to classic old web.", error);
+        applyTheme('classic');
       }
     }
 
