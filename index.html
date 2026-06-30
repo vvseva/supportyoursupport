@@ -9,25 +9,32 @@
     :root {
       --bg-color: #1a1625;
       --fg-color: #8cff9e;
+      --bg-image: url('https://deadlock.wiki/images/7/75/Viscous_Neon_Prime.png'); 
     }
 
     /* Rem Theme (Nighttime Blue) */
     [data-theme="rem"] {
       --bg-color: #0b1320;
       --fg-color: #4da6ff;
+      --bg-image: url('https://deadlock.wiki/images/a/ad/Rem_Voting_Thank_You.png');
     }
 
     /* Dynamo Theme (Gold) */
     [data-theme="dynamo"] {
       --bg-color: #241a0f;
       --fg-color: #ffc107;
+      --bg-image: url('https://deadlock.wiki/images/4/44/Dynamo_VN.png');
     }
 
     body {
       background-color: var(--bg-color);
-      background-image: url('https://deadlock.wiki/images/b/b4/Sinner%27s_Sacrifice.png');
-      background-repeat: repeat;
-      background-size: auto;
+      background-image: var(--bg-image);
+      /* Updated to cover and center to accommodate large character artworks */
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      
       color: var(--fg-color);
       font-family: 'Courier New', Courier, monospace;
       display: flex;
@@ -38,7 +45,7 @@
       margin: 0;
       padding: 1rem;
       box-sizing: border-box;
-      transition: background-color 0.3s, color 0.3s;
+      transition: background-color 0.3s, color 0.3s, background-image 0.5s ease-in-out;
     }
 
     .window {
@@ -108,17 +115,11 @@
       font-weight: bold;
     }
 
-    .tile-row, .theme-controls {
+    .tile-row {
       display: flex;
       justify-content: space-between;
       gap: 12px;
       margin-bottom: 24px;
-    }
-
-    .theme-controls {
-      max-width: 480px;
-      width: 100%;
-      margin-bottom: 0;
     }
 
     button, input {
@@ -151,13 +152,8 @@
       filter: invert(1);
     }
 
-    .soul-btn, .theme-btn {
+    .soul-btn {
       flex: 1;
-    }
-
-    .theme-btn {
-      font-size: 14px;
-      padding: 6px;
     }
 
     .input-group {
@@ -224,7 +220,6 @@
 </head>
 <body>
 
-  <!-- Main Tip Screen -->
   <div class="window" id="transfer-window">
     <div class="title-bar">
       <span class="title-bar-text">SOUL_TRANSFER_PROTOCOL</span>
@@ -262,27 +257,18 @@
     </div>
   </div>
 
-  <!-- Confirmation Screen -->
   <div class="window hidden" id="success-window">
     <div class="title-bar">
       <span class="title-bar-text">TRANSFER_COMPLETE</span>
     </div>
     <div class="content">
-      <!-- GIF source is dynamically injected by JavaScript -->
       <img src="img/viscous.gif" alt="Hero Response" class="success-gif" id="success-gif">
       <p class="success-msg"><strong>Thank you for supporting your support.</strong></p>
       <button type="button" class="submit-btn" id="reset-btn">Initiate New Transfer</button>
     </div>
   </div>
 
-  <!-- Local Theme Controls -->
-  <div class="theme-controls">
-    <button type="button" class="theme-btn" data-theme-target="viscous">Viscous</button>
-    <button type="button" class="theme-btn" data-theme-target="rem">Rem</button>
-    <button type="button" class="theme-btn" data-theme-target="dynamo">Dynamo</button>
-  </div>
-
-<script>
+  <script>
     // 1. Data Structures
     const themeData = {
       viscous: { gifPath: 'img/viscous.gif' },
@@ -290,12 +276,12 @@
       dynamo:  { gifPath: 'img/dynamo.gif' }
     };
 
+    // Replace this with the RAW URL of your GitHub Gist
     // Format: https://gist.githubusercontent.com/USERNAME/GIST_ID/raw/theme.json
-    const REMOTE_JSON_URL = 'https://gist.githubusercontent.com/vvseva/5f66e5edba811f8fb53ca12d5a4cd79a/raw/theme.json ';
+    const REMOTE_JSON_URL = 'https://gist.githubusercontent.com/vvseva/5f66e5edba811f8fb53ca12d5a4cd79a/raw/theme.json';
 
     // 2. DOM Elements
     const soulBtns = document.querySelectorAll('.soul-btn');
-    const themeBtns = document.querySelectorAll('.theme-btn');
     const customInput = document.getElementById('custom-souls');
     const tipForm = document.getElementById('tip-form');
     const transferWindow = document.getElementById('transfer-window');
@@ -312,24 +298,12 @@
       
       // Route the correct GIF for the success screen
       successGif.src = themeData[themeName].gifPath;
-      
-      // Visually highlight the active theme button
-      themeBtns.forEach(btn => {
-        if (btn.getAttribute('data-theme-target') === themeName) {
-          btn.classList.add('selected');
-        } else {
-          btn.classList.remove('selected');
-        }
-      });
     }
 
     async function fetchGlobalTheme() {
       try {
-        // Appending a timestamp bypasses the browser's local cache
         const response = await fetch(REMOTE_JSON_URL + '?t=' + new Date().getTime());
         const data = await response.json();
-        
-        // A raw GitHub gist returns the exact JSON you provide
         const globalTheme = data.theme;
         
         if (globalTheme && themeData[globalTheme]) {
@@ -343,15 +317,6 @@
 
     // 4. Event Listeners
     
-    // Theme switching via UI
-    themeBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const targetTheme = e.currentTarget.getAttribute('data-theme-target');
-        applyTheme(targetTheme);
-      });
-    });
-
-    // Soul amount selection
     soulBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         soulBtns.forEach(b => b.classList.remove('selected'));
@@ -364,7 +329,6 @@
       soulBtns.forEach(b => b.classList.remove('selected'));
     });
 
-    // Form submission
     tipForm.addEventListener('submit', (e) => {
       e.preventDefault(); 
       const soulsToTip = customInput.value;
@@ -375,7 +339,6 @@
       }
     });
 
-    // Reset sequence
     resetBtn.addEventListener('click', () => {
       tipForm.reset();
       soulBtns.forEach(b => b.classList.remove('selected'));
